@@ -24,6 +24,12 @@ namespace NZWalks.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] WalkPostDTO walkPostDTO)
         {
+            // Model Validation
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             // Map DTO to Domain Model
             Walk walk = mapper.Map<Walk>(walkPostDTO);
 
@@ -34,9 +40,9 @@ namespace NZWalks.API.Controllers
 
         // GET ALL WALKS
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] bool? isAscending, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
         {
-            var walks = await walkService.GetAllAsync();
+            var walks = await walkService.GetAllAsync(filterOn, filterQuery, isAscending ?? true, pageNumber, pageSize);
             var walkDtos = mapper.Map<List<WalkGetDTO>>(walks);
             return Ok(walkDtos);
         }
@@ -48,7 +54,7 @@ namespace NZWalks.API.Controllers
         {
             var walk = await walkService.GetWalkByIdAsync(id);
 
-            if(walk == null)
+            if (walk == null)
             {
                 return NotFound();
             }
@@ -62,11 +68,17 @@ namespace NZWalks.API.Controllers
         [Route("{id}")]
         public async Task<IActionResult> UpdateWalk([FromBody] WalkPutDTO walkPutDto, [FromRoute] Guid id)
         {
+            // Model Validation
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var walk = mapper.Map<Walk>(walkPutDto);
 
             walk = await walkService.UpdateWalkAsync(walk, id);
 
-            if(walk == null)
+            if (walk == null)
             {
                 return NotFound();
             }
@@ -81,7 +93,7 @@ namespace NZWalks.API.Controllers
         {
             var walk = await walkService.DeleteWalkAsync(id);
 
-            if(walk == null)
+            if (walk == null)
             {
                 return NotFound();
             }
